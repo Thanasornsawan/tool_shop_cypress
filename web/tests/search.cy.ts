@@ -1,5 +1,4 @@
 import SearchPage from '../pages/SearchPage';
-import ProductDetailPage from '../pages/ProductDetailPage';
 
 describe('Search Page Tests', () => {
   let searchPage: SearchPage;

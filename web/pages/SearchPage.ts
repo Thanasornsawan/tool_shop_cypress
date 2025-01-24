@@ -26,7 +26,7 @@ export default class SearchPage extends BasePage {
       );
   }
 
-  clickProduct(index: number): Cypress.Chainable<unknown> {
+  clickProduct(index: number = 0): Cypress.Chainable<unknown> {
     return cy.get(this.searchResults).eq(index).click();
   }
 

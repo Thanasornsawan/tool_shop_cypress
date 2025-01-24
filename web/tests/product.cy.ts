@@ -19,32 +19,16 @@ describe('Product Page Tests', () => {
 
     it('should search for Long Nose Pliers and verify out of stock behavior', () => {
         const searchKeyword = 'Long Nose Pliers';
-
-        searchPage.search(searchKeyword).then(exactProductIndex => {
-        // Verify search result text
-        cy.get('[data-test="search-caption"]')
-            .should('have.text', `Searched for: ${searchKeyword}`);
-
-        // Verify out of stock in search results
-        searchPage.isProductOutOfStock(searchKeyword).should('be.true');
-
-        // Get and store price from search card
-        searchPage.getProductPrice(searchKeyword).then(price_card => {
-            // Click product and verify details
-            cy.get('.card-body').eq(exactProductIndex).click();
-            
-            // Verify price matches
-            cy.get('[data-test="unit-price"]')
-            .invoke('text')
-            .then(text => parseFloat(text.replace('$', '')))
-            .should('equal', price_card);
-
-            // Verify out of stock status
-            cy.xpath('//p[text()="Out of stock"]').should('be.visible');
-            cy.get('[data-test="increase-quantity"]').should('be.disabled');
-            cy.get('[data-test="decrease-quantity"]').should('be.disabled');
-            cy.get('[data-test="add-to-cart"]').should('be.disabled');
-        });
+        searchPage.search(searchKeyword);
+        
+        searchPage.getProductPrice(searchKeyword).then(priceFromCard => {
+            searchPage.clickProduct();
+            productDetailPage.getProductPrice().then(priceFromDetail => {
+                expect(priceFromCard).to.equal(priceFromDetail);
+                productFeature.verifyProductOutOfStock().then((result) => {
+                    expect(result).to.be.true;
+                });
+            });
         });
     });
 

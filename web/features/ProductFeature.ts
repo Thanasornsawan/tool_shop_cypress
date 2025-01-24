@@ -68,4 +68,13 @@ export default class ProductFeature {
       });
     }, cy.wrap(null));
   }
+
+  verifyProductOutOfStock(): Cypress.Chainable<boolean> {
+    return this.productDetailPage.outOfStockLabelDisplay()
+      .then(() => this.productDetailPage.increaseQuanityDisabled())
+      .then(() => this.productDetailPage.descreaseQuantityDisabled())
+      .then(() => this.productDetailPage.addTocartDisabled())
+      .then(() => cy.wrap(true));
+  }
+
 }

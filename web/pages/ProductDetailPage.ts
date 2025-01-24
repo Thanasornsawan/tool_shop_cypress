@@ -8,7 +8,7 @@ export default class ProductDetailPage extends BasePage {
   private readonly addToCartButton = '[data-test="add-to-cart"]';
   private readonly cartIcon = '[data-test="nav-cart"]';
   private readonly cartQuantity = '[data-test="cart-quantity"]';
-  private readonly outOfStockLabel = 'text=Out of stock';
+  private readonly outOfStockLabel = '//p[text()="Out of stock"]';
   private readonly brandLabel = '//span[@aria-label="brand"]';
   private readonly categoryLabel = '//span[@aria-label="category"]';
   private readonly productName = '[data-test="product-name"]';
@@ -104,6 +104,22 @@ export default class ProductDetailPage extends BasePage {
       .should('be.visible')
       .invoke('removeAttr', 'target') // Ensure link opens in the same tab
       .click();
-  }  
+  }
+
+  outOfStockLabelDisplay(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.xpath(this.outOfStockLabel).should('be.visible');
+  }
+
+  increaseQuanityDisabled(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get(this.quantityPlus).should('be.disabled');
+  }
+
+  descreaseQuantityDisabled(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get(this.quantityMinus).should('be.disabled');
+  }
+
+  addTocartDisabled(): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy.get(this.addToCartButton).should('be.disabled');
+  }
 
 }
