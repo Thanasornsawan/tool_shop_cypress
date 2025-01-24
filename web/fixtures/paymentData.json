@@ -1,0 +1,9 @@
+{
+    "paymentOptions": {
+      "Bank Transfer": "bank-transfer",
+      "Cash on Delivery": "cash-on-delivery", 
+      "Credit Card": "credit-card",
+      "Buy Now Pay Later": "buy-now-pay-later",
+      "Gift Card": "gift-card"
+    }
+  }

@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ES2023",
+      "lib": ["ES2023", "dom"],
+      "moduleResolution": "node",
+      "types": ["cypress", "node", "@cypress/xpath", "cypress-real-events"],
+      "baseUrl": "./",
+      "paths": {
+        "@pages/*": ["web/pages/*"],        
+        "@fixtures/*": ["web/fixtures/*"],   
+        "@support/*": ["web/support/*"]      
+      },
+      "resolveJsonModule": true,
+      "esModuleInterop": true
+    },
+    "include": ["**/*.ts", "web/**/*.ts"]   
+  }
