@@ -75,8 +75,17 @@ describe('Product Page Tests', () => {
             });
     
             cartPage.getCartTotal().then((total) => {
+                /* method1: use reduce javascript function to calculate
                 const expectedTotal = addedProducts.reduce((sum, product, index) => 
                     sum + (product.price * productConfigs[index].quantity), 0);
+                */
+                // method2: use for-each to calculate
+                let expectedTotal = 0;
+                addedProducts.forEach((product, index) => {
+                    const quantity = productConfigs[index].quantity;
+                    expectedTotal += product.price * quantity;
+                });
+                
                 expect(total).to.be.closeTo(expectedTotal, 0.01);
             });
         });
