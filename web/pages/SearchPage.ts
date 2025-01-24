@@ -43,22 +43,30 @@ export default class SearchPage extends BasePage {
       .should('be.visible')
       .should('contain', keyword);
 
-    // Return found index
-    return cy.get(this.productNames).then($elements => {
-      const index = Array.from($elements).findIndex(el => 
-        el.textContent?.toLowerCase().includes(keyword.toLowerCase())
-      );
-      return index;
-    });
+    // Add wait for Angular HTTP request to complete
+    cy.wait(1000);
+    
+    // Wait for product names to stabilize
+    return cy.get(this.productNames)
+      .should('have.length.at.least', 1)
+      .then($elements => {
+        const index = Array.from($elements).findIndex(el => 
+          el.textContent?.toLowerCase().includes(keyword.toLowerCase())
+        );
+        return index;
+      });
   }
 
   getProductPrice(productName: string): Cypress.Chainable<number> {
-    return cy.contains(this.productNames, productName)
+    return cy.contains(this.productNames, productName, { timeout: 20000 }) // Wait for product to appear
+      .should('exist') // Ensure the product is found
       .parents(this.searchResults)
-      .find(this.productPrices)
+      .next() // Adjust for sibling structure
+      .find(this.productPrices, { timeout: 20000 }) // Wait for price to appear
+      .should('exist') // Ensure the price element exists
       .invoke('text')
-      .then(text => parseFloat(text.replace('$', '')));
-  }
+      .then((text) => parseFloat(text.replace('$', ''))); // Parse the price
+  }  
 
   getAllPrices(): Cypress.Chainable<number[]> {
     return cy.get(this.productPrices).then($elements => 

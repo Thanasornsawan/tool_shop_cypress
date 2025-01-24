@@ -9,12 +9,12 @@ export default class ProductDetailPage extends BasePage {
   private readonly cartIcon = '[data-test="nav-cart"]';
   private readonly cartQuantity = '[data-test="cart-quantity"]';
   private readonly outOfStockLabel = 'text=Out of stock';
-  private readonly brandLabel = '[aria-label="brand"]';
-  private readonly categoryLabel = '[aria-label="category"]';
+  private readonly brandLabel = '//span[@aria-label="brand"]';
+  private readonly categoryLabel = '//span[@aria-label="category"]';
   private readonly productName = '[data-test="product-name"]';
   private readonly productPrice = '[data-test="unit-price"]';
   private readonly addToCartSuccess = 'div[role="alert"]:contains("Product added to shopping cart.")';
-  private readonly relatedProductSection = 'text=Related products';
+  private readonly relatedProductSection = '//h1[text()="Related products"]';
   private readonly relatedProductCardTitle = '.card-title';
 
   // Get the product name
@@ -31,10 +31,11 @@ export default class ProductDetailPage extends BasePage {
 
   // Get current quantity value
   getCurrentQuantity(): Cypress.Chainable<number> {
-    return cy.get(this.quantityInput)
-      .invoke('val')
-      .then(val => Number(val));
-  }
+    return cy.get(this.quantityInput, { timeout: 10000 }) // Wait for the element
+      .should('be.visible') // Ensure it’s visible
+      .invoke('val') // Get the value
+      .then((val) => Number(val)); // Convert to number
+  }  
 
   // Increase quantity by specified amount
   increaseQuantity(times: number): Cypress.Chainable<number> {
@@ -77,13 +78,13 @@ export default class ProductDetailPage extends BasePage {
   }
 
   getCategory(): Cypress.Chainable<string> {
-    return cy.get(this.categoryLabel)
+    return cy.xpath(this.categoryLabel)
       .should('be.visible')
       .invoke('text');
   }
 
   getBrand(): Cypress.Chainable<string> {
-    return cy.get(this.brandLabel)
+    return cy.xpath(this.brandLabel)
       .should('be.visible')
       .invoke('text');
   }
@@ -96,18 +97,13 @@ export default class ProductDetailPage extends BasePage {
       );
   }
 
-  openRelatedProductInNewTab(index: number): Cypress.Chainable<Cypress.AUTWindow> {
-    cy.get(this.relatedProductSection).scrollIntoView();
-    
-    return cy.get(this.relatedProductCardTitle)
+  openRelatedProduct(index: number): void {
+    cy.xpath('//h5[@class="card-title"]/parent::div/a') // Selector for related product links
       .eq(index)
+      .scrollIntoView()
       .should('be.visible')
-      .then($el => {
-        cy.wrap($el).invoke('removeAttr', 'target'); // Remove target="_blank"
-        cy.wrap($el).click();
-        
-        return cy.window();
-      });
-  }
+      .invoke('removeAttr', 'target') // Ensure link opens in the same tab
+      .click();
+  }  
 
 }

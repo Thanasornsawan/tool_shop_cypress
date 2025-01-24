@@ -6,7 +6,7 @@ export default class CartPage extends BasePage {
   private readonly cartTable = '.table.table-hover';
   private readonly cartUpdateSuccess = 'div[role="alert"]:contains("Product quantity updated.")';
   private readonly cartDeleteSuccess = 'div[role="alert"]:contains("Product deleted.")';
-  private readonly cartTotal = '[data-test="cart-total"]';
+  private readonly cartTotal = '//td[@data-test="cart-total"]';
   private readonly proceedToCheckoutButton1 = '[data-test="proceed-1"]';
   private readonly proceedToCheckoutButton2 = '[data-test="proceed-2"]';
   private readonly proceedToCheckoutButton3 = '[data-test="proceed-3"]';
@@ -14,15 +14,25 @@ export default class CartPage extends BasePage {
   private readonly confirmPaymentButton = '[data-test="finish"]';
   private readonly orderConfirmation = '#order-confirmation';
   private readonly paymentSuccess = 'text="Payment was successful"';
+  private readonly productTitle = 'span[data-test="product-title"]';
+  private readonly productPrice = 'span[data-test="product-price"]';
+  private readonly productQuantity = 'input[data-test="product-quantity"]';
+  private readonly productTotalPrice = 'span[data-test="line-price"]';
 
   private getProductLocators(productName: string) {
-    const baseLocator = cy.contains('span', productName).parent().parent();
-
     return {
-      quantity: baseLocator.find('input[data-test="product-quantity"]'),
-      unitPrice: baseLocator.find('span[data-test="product-price"]'),
-      totalPrice: baseLocator.find('span[data-test="line-price"]'),
-      deleteButton: baseLocator.find('a.btn.btn-danger svg[data-icon="xmark"]')
+      quantity: cy.contains('span[data-test="product-title"]', productName)
+        .parents('tr')
+        .find('input[data-test="product-quantity"]'),
+      unitPrice: cy.contains('span[data-test="product-title"]', productName)
+        .parents('tr')
+        .find('span[data-test="product-price"]'),
+      totalPrice: cy.contains('span[data-test="product-title"]', productName)
+        .parents('tr')
+        .find('span[data-test="line-price"]'),
+      deleteButton: cy.contains('span[data-test="product-title"]', productName)
+        .parents('tr')
+        .find('a.btn.btn-danger svg[data-icon="xmark"]')
     };
   }
 
@@ -61,36 +71,56 @@ export default class CartPage extends BasePage {
     cy.contains('span[data-test="product-title"]', productName)
       .should('not.exist');
     
-    
   }
 
   getProductPriceInfo(productName: string): Cypress.Chainable<{
+    name: string;
     unitPrice: number;
     quantity: number;
     totalPrice: number;
-  }> {
-    const locators = this.getProductLocators(productName);
-    
-    return locators.unitPrice
-      .invoke('text')
-      .then(text => parseFloat(text.replace('$', '')))
-      .then(unitPrice => {
-        return locators.quantity
-          .invoke('val')
-          .then(Number)
-          .then(quantity => {
-            return locators.totalPrice
-              .invoke('text')
-              .then(text => parseFloat(text.replace('$', '')))
-              .then(totalPrice => {
-                return { unitPrice, quantity, totalPrice };
-              });
+   }> {
+    const result = {
+      name: '',
+      unitPrice: 0,
+      quantity: 0,
+      totalPrice: 0
+    };
+   
+    return cy.contains(this.productTitle, productName)
+      .parents('tr')
+      .within(() => {
+        cy.get(this.productTitle)
+          .invoke('text')
+          .then(text => {
+            result.name = text.trim();
           });
-      });
-  }
+   
+        cy.get(this.productPrice)
+          .invoke('text')
+          .then(text => {
+            result.unitPrice = parseFloat(text.replace('$', ''));
+            cy.log('unitPrice:', result.unitPrice);
+          });
+   
+        cy.get(this.productQuantity)
+          .invoke('val')
+          .then(val => {
+            result.quantity = Number(val);
+            cy.log('quantity:', result.quantity);
+          });
+   
+        cy.get(this.productTotalPrice)
+          .invoke('text')
+          .then(text => {
+            result.totalPrice = parseFloat(text.replace('$', ''));
+            cy.log('totalPrice:', result.totalPrice);
+          });
+      })
+      .then(() => result);
+   }
 
   getCartTotal(): Cypress.Chainable<number> {
-    return cy.get(this.cartTotal)
+    return cy.xpath(this.cartTotal)
       .invoke('text')
       .then(text => parseFloat(text.replace('$', '')));
   }
