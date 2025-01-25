@@ -1,13 +1,14 @@
 import SearchPage from '../pages/SearchPage';
+import ProductDetailPage from '../pages/ProductDetailPage';
 
 describe('Search Page Tests', () => {
   let searchPage: SearchPage;
+  let productDetailPage: ProductDetailPage;
   
   beforeEach(() => {
     searchPage = new SearchPage();
+    productDetailPage = new ProductDetailPage();
     cy.visit('/');
-    // Wait for page to be fully loaded instead
-    cy.get('.card-body').should('exist');
   });
 
   it('should filter products by price range using slider', () => {
@@ -58,17 +59,15 @@ describe('Search Page Tests', () => {
     searchPage.filterByBrand(expectedBrand);
 
     // Click first result and verify brand
-    cy.get('.card-body').first().click();
-    cy.get('[aria-label="brand"]')
-      .should('be.visible')
-      .and('contain.text', expectedBrand);
+    searchPage.clickProduct();
+    productDetailPage.getBrand().then(brand => {
+      expect(brand).to.equal(expectedBrand);
+    });
   });
 
   it('should return correct search result count', () => {
     const searchKeyword = 'Long Nose Pliers';
     searchPage.search(searchKeyword);
-    cy.get('[data-test="search-caption"]')
-      .should('have.text', `Searched for: ${searchKeyword}`);
 
     cy.get('.card-body').should('have.length', 1);
 

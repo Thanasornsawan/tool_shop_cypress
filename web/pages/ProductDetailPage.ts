@@ -86,7 +86,8 @@ export default class ProductDetailPage extends BasePage {
   getBrand(): Cypress.Chainable<string> {
     return cy.xpath(this.brandLabel)
       .should('be.visible')
-      .invoke('text');
+      .invoke('text')
+      .then(text => text.trim());
   }
 
   getRelatedProductNames(): Cypress.Chainable<string[]> {

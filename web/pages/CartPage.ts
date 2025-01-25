@@ -19,59 +19,44 @@ export default class CartPage extends BasePage {
   private readonly productQuantity = 'input[data-test="product-quantity"]';
   private readonly productTotalPrice = 'span[data-test="line-price"]';
 
-  private getProductLocators(productName: string) {
-    return {
-      quantity: cy.contains('span[data-test="product-title"]', productName)
-        .parents('tr')
-        .find('input[data-test="product-quantity"]'),
-      unitPrice: cy.contains('span[data-test="product-title"]', productName)
-        .parents('tr')
-        .find('span[data-test="product-price"]'),
-      totalPrice: cy.contains('span[data-test="product-title"]', productName)
-        .parents('tr')
-        .find('span[data-test="line-price"]'),
-      deleteButton: cy.contains('span[data-test="product-title"]', productName)
-        .parents('tr')
-        .find('a.btn.btn-danger svg[data-icon="xmark"]')
-    };
-  }
-
   async adjustProductQuantity(productName: string, newQuantity: number): Promise<void> {
-    const locators = this.getProductLocators(productName);
-    
-    locators.quantity
-      .should('be.visible')
+    cy.contains(this.productTitle, productName)
+      .parents('tr')
+      .find(this.productQuantity)
       .clear()
       .type(newQuantity.toString())
-      .trigger('input')  // Trigger Angular form update
-      .trigger('ngModelChange') // Trigger Angular binding update
+      .trigger('input')
+      .trigger('ngModelChange')
       .type('{enter}');
-
-    // Wait for update confirmation
+   
+    // Wait for update confirmation to appear
     cy.get(this.cartUpdateSuccess).should('be.visible');
-    locators.totalPrice.should('be.visible');
     
-  }
+    // Add a small wait for Angular update
+    cy.wait(1000);
+   
+    cy.contains(this.productTitle, productName)
+      .parents('tr')
+      .find(this.productTotalPrice)
+      .should('be.visible');
+   }
 
   async deleteProduct(productName: string): Promise<void> {
-    const locators = this.getProductLocators(productName);
-    
-    locators.deleteButton
-      .should('be.visible')
+    // Find and click delete button directly
+    cy.contains(this.productTitle, productName)
+      .parents('tr')
+      .find('.btn-danger')
       .click();
-
-    // Wait for delete confirmation
+   
+    // Verify deletion
     cy.get('body').then($body => {
       if ($body.find(this.cartDeleteSuccess).length) {
         cy.get(this.cartDeleteSuccess).should('be.visible');
       }
     });
-
-    // Verify product removal
-    cy.contains('span[data-test="product-title"]', productName)
-      .should('not.exist');
-    
-  }
+   
+    cy.contains(this.productTitle, productName).should('not.exist');
+   }
 
   getProductPriceInfo(productName: string): Cypress.Chainable<{
     name: string;
