@@ -1,7 +1,11 @@
 import BasePage from './BasePage';
 
 export default class MyInvoicesPage extends BasePage {
-  private readonly invoicesTable = 'table';
+  private readonly invoiceNumberCell = (invoiceNumber: string) => `//td[text()="${invoiceNumber}"]`;
+  private readonly invoiceAddressCell = (invoiceNumber: string) => `//td[text()="${invoiceNumber}"]/parent::tr/td[2]`;
+  private readonly invoiceDateCell = (invoiceNumber: string) => `//td[text()="${invoiceNumber}"]/parent::tr/td[3]`;
+  private readonly invoiceTotalCell = (invoiceNumber: string) => `//td[text()="${invoiceNumber}"]/parent::tr/td[4]`;
+  private readonly invoiceDetailsButton = (invoiceNumber: string) => `//td[text()="${invoiceNumber}"]/parent::tr/td[5]/a[text()="Details"]`;
 
   getInvoiceData(invoiceNumber: string): Cypress.Chainable<{
     invoiceNumber: string;
@@ -9,27 +13,26 @@ export default class MyInvoicesPage extends BasePage {
     date: string;
     total: string;
   }> {
-    return cy.contains('tbody tr td', invoiceNumber)
-      .parent('tr')
-      .find('td')
-      .should('have.length.at.least', 4)
-      .then($cells => ({
-        invoiceNumber: $cells.eq(0).text(),
-        address: $cells.eq(1).text(),
-        date: $cells.eq(2).text(),
-        total: $cells.eq(3).text()
-      }));
+    return cy.then(() => {
+      return cy.xpath(this.invoiceAddressCell(invoiceNumber)).invoke('text').then(address => {
+        return cy.xpath(this.invoiceDateCell(invoiceNumber)).invoke('text').then(date => {
+          return cy.xpath(this.invoiceTotalCell(invoiceNumber)).invoke('text').then(total => {
+            return {
+              invoiceNumber,
+              address,
+              date,
+              total
+            };
+          });
+        });
+      });
+    });
   }
 
-  async viewInvoiceDetails(invoiceNumber: string): Promise<void> {
-    cy.contains(`td:contains("${invoiceNumber}")`)
-      .parent('tr')
-      .find('a:contains("Details")')
+  viewInvoiceDetails(invoiceNumber: string): Cypress.Chainable {
+    cy.xpath(this.invoiceDetailsButton(invoiceNumber))
       .should('be.visible')
       .click();
-
-    // Wait for navigation
-    cy.url().should('include', '/invoice');
-    
+    return cy.url().should('include', '/invoice');
   }
 }

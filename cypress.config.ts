@@ -1,7 +1,6 @@
 import { defineConfig } from 'cypress';
 import { verifyDownloadTasks } from 'cy-verify-downloads';
 import * as fs from 'fs';
-import * as path from 'path';
 
 interface TakeScreenshotConfig {
   name: string;
@@ -14,7 +13,7 @@ export default defineConfig({
     specPattern: 'web/tests/**/*.cy.ts',
     supportFile: 'web/support/e2e.ts',
     videosFolder: 'web/videos',
-    screenshotsFolder: 'web/reports/mocha/assets', // Keep screenshots in mochawesome assets
+    screenshotsFolder: 'web/reports/mocha/assets',
     downloadsFolder: 'web/downloads',
     reporter: 'cypress-multi-reporters',
     reporterOptions: {
@@ -30,7 +29,7 @@ export default defineConfig({
         overwrite: true,
         html: true,
         json: true,
-        attachments: true
+        attachments: true,
       },
       mochaJunitReporterReporterOptions: {
         mochaFile: 'web/reports/junit/results-[hash].xml',
@@ -39,10 +38,22 @@ export default defineConfig({
     viewportWidth: 1280,
     viewportHeight: 1200,
     video: false,
+    chromeWebSecurity: false,
+    experimentalModifyObstructiveThirdPartyCode: true,
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 30000,
     setupNodeEvents(on, config) {
+      const enableVideo = config.env.enableVideo; // Pass the spec name as an environment variable
+      if (enableVideo && (enableVideo === 'true' || enableVideo === true)) {
+        console.log('Enabling video recording for:', enableVideo);
+        config.video = true; // Enable video for specific spec
+        config.videoCompression = false;
+      } else {
+        console.log('Video recording disabled for:', enableVideo);
+        config.video = false;
+      }
+      // Custom browser settings
       on('before:browser:launch', (browser: Cypress.Browser, launchOptions) => {
         if (browser.family === 'chromium' && browser.name !== 'electron') {
           launchOptions.args.push('--enable-features=CSSScrollSnapPoints');
@@ -50,6 +61,7 @@ export default defineConfig({
         return launchOptions;
       });
 
+      // Custom tasks
       on('task', {
         ...verifyDownloadTasks,
         log({ message }) {

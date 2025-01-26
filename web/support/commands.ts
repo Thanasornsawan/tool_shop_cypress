@@ -62,27 +62,3 @@ Cypress.Commands.overwrite<'realMouseMove'>(
 Cypress.Commands.add('getByTestId', (dataTestId: string) => {
   return cy.get(`[data-test="${dataTestId}"]`);
 });
-
-Cypress.Commands.add('verifyPdfContent', (pdfPath, expectedContent) => {
-  return cy.task('parsePdf', { filePath: pdfPath }).then((pdfText: string) => {
-    if (expectedContent.invoiceNumber) {
-      expect(pdfText).to.include(expectedContent.invoiceNumber);
-    }
-    if (expectedContent.date) {
-      expect(pdfText).to.include(expectedContent.date);
-    }
-    if (expectedContent.productInfo) {
-      expect(pdfText).to.include(expectedContent.productInfo.name);
-      expect(pdfText).to.include(expectedContent.productInfo.quantity.toString());
-      expect(pdfText).to.include(expectedContent.productInfo.unitPrice.toFixed(2));
-      expect(pdfText).to.include(expectedContent.productInfo.totalPrice.toFixed(2));
-    }
-    if (expectedContent.total) {
-      expect(pdfText).to.include(expectedContent.total);
-    }
-    if (expectedContent.paymentMethod) {
-      expect(pdfText).to.include(expectedContent.paymentMethod);
-    }
-    return undefined;
-  });
-});

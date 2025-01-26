@@ -13,7 +13,7 @@ export default class CartPage extends BasePage {
   private readonly paymentMethodDropdown = '[data-test="payment-method"]';
   private readonly confirmPaymentButton = '[data-test="finish"]';
   private readonly orderConfirmation = '#order-confirmation';
-  private readonly paymentSuccess = 'text="Payment was successful"';
+  private readonly paymentSuccess = '//div[text()="Payment was successful"]';
   private readonly productTitle = 'span[data-test="product-title"]';
   private readonly productPrice = 'span[data-test="product-price"]';
   private readonly productQuantity = 'input[data-test="product-quantity"]';
@@ -123,19 +123,16 @@ export default class CartPage extends BasePage {
       .should('be.visible')
       .should('not.be.disabled')
       .click();
-    
 
     cy.get(this.proceedToCheckoutButton2)
       .should('be.visible')
       .should('not.be.disabled')
       .click();
-    
 
     cy.get(this.proceedToCheckoutButton3)
       .should('be.visible')
       .should('not.be.disabled')
       .click();
-    
 
     // Select payment method with Angular form handling
     cy.get(this.paymentMethodDropdown)
@@ -143,21 +140,18 @@ export default class CartPage extends BasePage {
       .trigger('change')
       .trigger('ngModelChange');
     
-
     // Confirm payment
     cy.get(this.confirmPaymentButton)
       .should('be.visible')
       .should('not.be.disabled')
       .click();
     
-    cy.get(this.paymentSuccess).should('be.visible');
+    cy.xpath(this.paymentSuccess).should('be.visible');
     
     cy.get(this.confirmPaymentButton)
       .should('be.visible')
       .should('not.be.disabled')
       .click();
-    
-    
   }
 
   getInvoiceNumberFromConfirmation(): Cypress.Chainable<string | null> {
