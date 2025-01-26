@@ -24,6 +24,6 @@ npx cypress run --spec web/tests/e2e.cy.ts --env enableVideo=true
 ```
 
 **Result**
-![e2e video](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/videos/e2e.cy.ts.mp4?raw=true)
+![e2e video](https://github.com/Thanasornsawan/tool_shop_cypress/tree/main/web/videos/e2e.cy.ts.mp4?raw=true)
 
 ![report](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/report.png?raw=true)
