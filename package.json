@@ -1,17 +1,30 @@
 {
-  "name": "tool_shop_cypress",
+  "name": "cypress-web-api-testing",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Cypress Web and API Testing Framework",
   "scripts": {
-    "cy:open": "cypress open",
-    "cy:run": "cypress run",
+    "cy:open:web": "cypress open --config-file cypress.config.ts --env type=web",
+    "cy:open:api": "cypress open --config-file cypress.config.ts --env type=api",
+    "cy:run:web": "cypress run --config-file cypress.config.ts --env type=web",
+    "cy:run:api": "cypress run --config-file cypress.config.ts --env type=api",
     "cy:run:chrome": "cypress run --browser chrome",
     "cy:run:firefox": "cypress run --browser firefox",
-    "report:clean": "rimraf web/reports/*",
-    "report:merge": "mochawesome-merge web/reports/mocha/*.json > web/reports/mochawesome.json",
-    "report:generate": "marge web/reports/mochawesome.json -f report -o web/reports --inline --charts --screenshots web/reports/mocha/assets",
-    "test:with-report": "npm run report:clean && npm run cy:run && npm run report:merge && npm run report:generate"
+    
+    "report:clean:web": "rimraf web/reports/*",
+    "report:clean:api": "rimraf api/reports/*",
+    "report:clean:all": "rimraf {web,api}/reports/*",
+    
+    "report:merge:web": "mochawesome-merge web/reports/mocha/*.json > web/reports/mochawesome.json",
+    "report:merge:api": "mochawesome-merge api/reports/mocha/*.json > api/reports/mochawesome.json",
+    "report:merge:all": "mochawesome-merge {web,api}/reports/mocha/*.json > reports/mochawesome.json",
+    
+    "report:generate:web": "marge web/reports/mochawesome.json -f report -o web/reports --inline --charts --screenshots web/reports/mocha/assets",
+    "report:generate:api": "marge api/reports/mochawesome.json -f report -o api/reports --inline --charts --screenshots api/reports/mocha/assets",
+    "report:generate:all": "marge reports/mochawesome.json -f report -o reports --inline --charts --screenshots {web,api}/reports/mocha/assets",
+    
+    "test:web": "npm run report:clean:web && npm run cy:run:web && npm run report:merge:web && npm run report:generate:web",
+    "test:api": "npm run report:clean:api && npm run cy:run:api && npm run report:merge:api && npm run report:generate:api",
+    "test:all": "npm run report:clean:all && npm run cy:run:web && npm run cy:run:api && npm run report:merge:all && npm run report:generate:all"
   },
   "author": "",
   "license": "ISC",

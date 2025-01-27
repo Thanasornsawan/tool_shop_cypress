@@ -1,6 +1,8 @@
 import { defineConfig } from 'cypress';
 import { verifyDownloadTasks } from 'cy-verify-downloads';
 import * as fs from 'fs';
+import { WEB_CONFIG } from './config/web.config';
+import { API_CONFIG } from './config/api.config';
 
 interface TakeScreenshotConfig {
   name: string;
@@ -9,8 +11,8 @@ interface TakeScreenshotConfig {
 export default defineConfig({
   projectId: 'jxeg7b',
   e2e: {
-    baseUrl: 'https://practicesoftwaretesting.com',
-    specPattern: 'web/tests/**/*.cy.ts',
+    baseUrl: WEB_CONFIG.baseUrl,
+    specPattern: '{web,api}/tests/**/*.cy.ts',
     supportFile: 'web/support/e2e.ts',
     videosFolder: 'web/videos',
     screenshotsFolder: 'web/reports/mocha/assets',
@@ -44,24 +46,50 @@ export default defineConfig({
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 30000,
     setupNodeEvents(on, config) {
-      const enableVideo = config.env.enableVideo; // Pass the spec name as an environment variable
-      if (enableVideo && (enableVideo === 'true' || enableVideo === true)) {
-        console.log('Enabling video recording for:', enableVideo);
-        config.video = true; // Enable video for specific spec
-        config.videoCompression = false;
-      } else {
-        console.log('Video recording disabled for:', enableVideo);
+      const isApiTest = config.env.type === 'api' || 
+                       (config.spec?.relative && config.spec.relative.includes('/api/'));
+      
+      if (isApiTest) {
+        config.baseUrl = API_CONFIG.baseUrl;
+        config.specPattern = 'api/tests/**/*.cy.ts';
+        config.supportFile = 'api/support/e2e.ts';
+        config.fixturesFolder = 'api/fixtures';
         config.video = false;
-      }
-      // Custom browser settings
-      on('before:browser:launch', (browser: Cypress.Browser, launchOptions) => {
-        if (browser.family === 'chromium' && browser.name !== 'electron') {
-          launchOptions.args.push('--enable-features=CSSScrollSnapPoints');
+        config.screenshotOnRunFailure = false;
+        config.viewportWidth = undefined;
+        config.viewportHeight = undefined;
+        
+        // Update reporter options for API
+        config.reporterOptions = {
+          ...config.reporterOptions,
+          mochawesomeReporterOptions: {
+            ...config.reporterOptions.mochawesomeReporterOptions,
+            reportDir: 'api/reports/mocha',
+            screenshotsFolder: 'api/reports/mocha/assets',
+            reportPageTitle: 'API Test Execution Report',
+          },
+          mochaJunitReporterReporterOptions: {
+            mochaFile: 'api/reports/junit/results-[hash].xml',
+          },
+        };
+      } else {
+        // Web specific configuration
+        const enableVideo = config.env.enableVideo;
+        if (enableVideo && (enableVideo === 'true' || enableVideo === true)) {
+          config.video = true;
+          config.videoCompression = false;
         }
-        return launchOptions;
-      });
 
-      // Custom tasks
+        // Custom browser settings for web tests
+        on('before:browser:launch', (browser: Cypress.Browser, launchOptions) => {
+          if (browser.family === 'chromium' && browser.name !== 'electron') {
+            launchOptions.args.push('--enable-features=CSSScrollSnapPoints');
+          }
+          return launchOptions;
+        });
+      }
+
+      // Custom tasks for both Web and API
       on('task', {
         ...verifyDownloadTasks,
         log({ message }) {
@@ -76,9 +104,11 @@ export default defineConfig({
           return data.text;
         },
         takeScreenshot({ name }: TakeScreenshotConfig) {
-          const screenshotsFolder = 'web/reports/mocha/assets';
-          if (!fs.existsSync(screenshotsFolder)) {
-            fs.mkdirSync(screenshotsFolder, { recursive: true });
+          if (!isApiTest) {
+            const screenshotsFolder = 'web/reports/mocha/assets';
+            if (!fs.existsSync(screenshotsFolder)) {
+              fs.mkdirSync(screenshotsFolder, { recursive: true });
+            }
           }
           return null;
         },
