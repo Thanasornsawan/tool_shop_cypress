@@ -1,4 +1,4 @@
-# Automate web and API testing with Cypress typescript
+# Automate Web and API testing with Cypress Typescript
 
 This practice use website https://practicesoftwaretesting.com/ for testing. <br/>
 You may want to see detail about API documentation and how to setup web testing on localhost from https://github.com/testsmith-io/practice-software-testing <br/>
