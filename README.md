@@ -26,6 +26,7 @@ npm run test:web
 **For run only API**
 ```sh
 npm run test:api
+npm run test:api:spec "api/tests/user.cy.ts"
 ```
 ![api result](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/api_result.png?raw=true)
 ![api report](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/api_report.png?raw=true)

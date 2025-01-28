@@ -100,42 +100,57 @@ export default class ProductDetailPage extends BasePage {
   }
 
   openRelatedProducts(mainCategory: string): void {
-    const relatedProductCardLink = this.relatedProductCardLink;
-    const categoryLabel = this.categoryLabel;
+    const relatedProductCardTitle = this.relatedProductCardTitle; // Store the locator in a variable
+    const categoryLabel = this.categoryLabel; // Store the locator in a variable
+    const productName = this.productName; // Store the locator in a variable
 
-    cy.xpath(relatedProductCardLink)
-        .should('be.visible')
-        .should('not.have.class', 'loading') // If there’s any loading class, wait until it's gone
-        .then($links => {
-            const linksArray = Array.from($links); // Convert NodeList to array
+    cy.get(productName) // Get the main product name once
+        .invoke('text')
+        .then(mainProductName => {
+            cy.get(relatedProductCardTitle) // Use cy.get for CSS selectors
+                .should('be.visible')
+                .should('not.have.class', 'loading') // If there’s any loading class, wait until it's gone
+                .then($titles => {
+                    const titlesArray = Array.from($titles); // Convert NodeList to array
 
-            function processLink(index: number) {
-                if (index >= linksArray.length) return; // Exit condition
+                    function processLink(index: number) {
+                        if (index >= titlesArray.length) return; // Exit condition
 
-                // Dynamically re-query the link and ensure it's stable
-                cy.xpath(`(${relatedProductCardLink})[${index + 1}]`).as('currentLink');
+                        // Dynamically re-query the related product card title
+                        cy.get(`${relatedProductCardTitle}:eq(${index})`).as('currentCardTitle'); // Use eq() for index-based selection
 
-                cy.get('@currentLink')
-                    .should('exist')
-                    .should('be.visible')
-                    .should('not.have.class', 'loading') // Ensure no loading state is present
-                    .click(); // Perform click action
+                        cy.get('@currentCardTitle')
+                            .should('be.visible')
+                            .should('not.have.class', 'loading') // Ensure no loading state is present
+                            .click(); // Click the related product card title
 
-                // Verify category on the new page
-                cy.xpath(categoryLabel)
-                    .should('be.visible')
-                    .should('have.text', mainCategory);
+                            cy.wait(6000);
+                        
+                        // Wait for the page to load (e.g., wait for the product name element)
+                        cy.get(productName)
+                            .should('be.visible') // Ensure the product name is visible (page is loaded)
+                            .invoke('text') // Get the text of the product name
+                            .then(relatedProductName => {
+                                expect(relatedProductName).not.to.equal(mainProductName); // Ensure product name is different
 
-                // Navigate back and stabilize the DOM
-                cy.go('back');
-                cy.xpath(relatedProductCardLink)
-                    .should('be.visible') // Wait for related products to reappear
-                    .should('not.have.class', 'loading'); // Ensure loading class is not present
+                                // Verify category on the new page
+                                cy.xpath(categoryLabel)
+                                    .should('be.visible')
+                                    .should('have.text', mainCategory);
 
-                processLink(index + 1); // Process the next link
-            }
+                                // Navigate back and stabilize the DOM
+                                cy.go('back');
+                                cy.get(relatedProductCardTitle) // Wait for related products to reappear
+                                    .should('be.visible')
+                                    .should('not.have.class', 'loading'); // Ensure loading class is not present
+                            });
 
-            processLink(0); // Start processing links
+                        // Process the next related product
+                        processLink(index + 1);
+                    }
+
+                    processLink(0); // Start processing links
+                });
         });
 }
 

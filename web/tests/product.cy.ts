@@ -32,7 +32,7 @@ describe('Product Page Tests', () => {
         });
     });
 
-    it.only('should verify related products match main product category', () => {
+    it('should verify related products match main product category', () => {
         // Step 1: Search for "Pliers" and wait for results
         searchPage.search('Pliers');
     
