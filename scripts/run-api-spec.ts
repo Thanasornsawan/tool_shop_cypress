@@ -102,22 +102,22 @@ async function modifyJsonReport(jsonPath: string, suitePrefix: string) {
     }
 }
 
-// Function to run a specific web test spec file
-async function runWebTestSpec(specFile: string) {
-    console.log(`\nRunning web tests for spec file: ${specFile}...`);
+// Function to run a specific api test spec file
+async function runAPITestSpec(specFile: string) {
+    console.log(`\nRunning api tests for spec file: ${specFile}...`);
 
     try {
-        const reportDir = 'web/reports/mocha';
+        const reportDir = 'api/reports/mocha';
         await cleanDirectory(reportDir);
         await ensureDirectoryExists('reports/mocha');
 
         let testSuccess = false;
         try {
-            // Execute only the specific spec file
-            execSync(`npx cypress run --spec ${specFile}`, { stdio: 'inherit' });
+            // Execute only the specific spec file with correct config
+            execSync(`npx cypress run --spec ${specFile} --config-file cypress.config.ts --env type=api`, { stdio: 'inherit' });
             testSuccess = true;
         } catch (error) {
-            console.log('Web test failed, but continuing with report generation...');
+            console.log('API test failed, but continuing with report generation...');
         }
 
         // Check if any JSON files are created and process them
@@ -126,7 +126,7 @@ async function runWebTestSpec(specFile: string) {
             for (const file of jsonFiles) {
                 if (file.endsWith('.json')) {
                     const jsonPath = path.join('reports/mocha', file);
-                    await modifyJsonReport(jsonPath, 'WEB');
+                    await modifyJsonReport(jsonPath, 'API');
 
                     const targetPath = path.join(reportDir, file);
                     await fs.copyFile(jsonPath, targetPath);
@@ -134,12 +134,12 @@ async function runWebTestSpec(specFile: string) {
                 }
             }
 
-            execSync('npm run report:merge:web && npm run report:generate:web', { stdio: 'inherit' });
+            execSync('npm run report:merge:api && npm run report:generate:api', { stdio: 'inherit' });
         }
 
         return testSuccess;
     } catch (error) {
-        console.error('Error running web test spec:', error.message);
+        console.error('Error running api test spec:', error.message);
         return false;
     }
 }
@@ -173,9 +173,9 @@ async function generateCombinedReport() {
     console.log('\nGenerating combined report...');
     
     try {
-        const hasWebReports = await checkJsonFilesExist('web/reports/mocha');
+        const hasAPIReports = await checkJsonFilesExist('api/reports/mocha');
 
-        if (!hasWebReports) {
+        if (!hasAPIReports) {
             console.log('No test reports found to combine');
             return;
         }
@@ -185,18 +185,18 @@ async function generateCombinedReport() {
         await ensureDirectoryExists('reports/assets');
 
         // Copy assets
-        await copyDirectory('web/reports/mocha/assets', 'reports/assets');
+        await copyDirectory('api/reports/mocha/assets', 'reports/assets');
 
         // Merge all reports into a combined JSON
-        let mergeCommand = 'mochawesome-merge web/reports/mocha/*.json > reports/combined.json';
+        let mergeCommand = 'mochawesome-merge api/reports/mocha/*.json > reports/combined.json';
 
         execSync(mergeCommand, { stdio: 'inherit' });
 
         // Deduplicate test suites in the combined report
         await deduplicateTestSuites('reports/combined.json');
 
-        // Generate the HTML report from the web-specific merged JSON
-        execSync('npm run report:generate:web', { stdio: 'inherit' });
+        // Generate the HTML report from the api-specific merged JSON
+        execSync('npm run report:generate:api', { stdio: 'inherit' });
 
         // Fix asset paths
         const reportPath = 'reports/combined_results.html';
@@ -217,24 +217,24 @@ async function runAllTests(specFile: string) {
         console.log('Running initial cleanup...');
         execSync('node scripts/cleanup.js', { stdio: 'inherit' });
 
-        // Run the specific web test spec file passed as a parameter
-        const webSuccess = await runWebTestSpec(specFile);
+        // Run the specific api test spec file passed as a parameter
+        const apiSuccess = await runAPITestSpec(specFile);
 
         await generateCombinedReport();
 
         console.log('\nTest Execution Summary:');
         console.log('----------------------');
-        console.log(`Web Tests: ${webSuccess ? 'PASSED' : 'FAILED'}`);
+        console.log(`API Tests: ${apiSuccess ? 'PASSED' : 'FAILED'}`);
 
         console.log('\nReports available at:');
-        if (await fs.access('web/reports/mocha/index.html').then(() => true).catch(() => false)) {
-            console.log('- Web Tests:     web/reports/mocha/index.html');
+        if (await fs.access('api/reports/mocha/index.html').then(() => true).catch(() => false)) {
+            console.log('- api Tests:     api/reports/mocha/index.html');
         }
         if (await fs.access('reports/combined_results.html').then(() => true).catch(() => false)) {
             console.log('- Combined:      reports/combined_results.html');
         }
 
-        if (!webSuccess) {
+        if (!apiSuccess) {
             process.exit(1);
         }
     } catch (error) {
