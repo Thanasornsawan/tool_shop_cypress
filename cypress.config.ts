@@ -12,7 +12,6 @@ export default defineConfig({
   projectId: 'jxeg7b',
   e2e: {
     baseUrl: WEB_CONFIG.baseUrl,
-    specPattern: '{web,api}/tests/**/*.cy.ts',
     supportFile: 'web/support/e2e.ts',
     videosFolder: 'web/videos',
     screenshotsFolder: 'web/reports/mocha/assets',
@@ -21,20 +20,18 @@ export default defineConfig({
     reporterOptions: {
       reporterEnabled: 'mochawesome, mocha-junit-reporter',
       mochawesomeReporterOptions: {
-        reportDir: 'web/reports/mocha',
-        screenshotsFolder: 'web/reports/mocha/assets',
+        reportDir: 'reports/mocha',
+        overwrite: false,
+        html: false,
+        json: true,
         charts: true,
-        reportPageTitle: 'Test Execution Report',
         embeddedScreenshots: true,
         inlineAssets: true,
+        reportPageTitle: 'Test Execution Report',
         quiet: true,
-        overwrite: true,
-        html: true,
-        json: true,
-        attachments: true,
       },
       mochaJunitReporterReporterOptions: {
-        mochaFile: 'web/reports/junit/results-[hash].xml',
+        mochaFile: 'reports/junit/results-[hash].xml',
       },
     },
     viewportWidth: 1280,
@@ -46,8 +43,7 @@ export default defineConfig({
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 30000,
     setupNodeEvents(on, config) {
-      const isApiTest = config.env.type === 'api' || 
-                       (config.spec?.relative && config.spec.relative.includes('/api/'));
+      const isApiTest = config.env.type === 'api';
       
       if (isApiTest) {
         config.baseUrl = API_CONFIG.baseUrl;
@@ -58,29 +54,18 @@ export default defineConfig({
         config.screenshotOnRunFailure = false;
         config.viewportWidth = undefined;
         config.viewportHeight = undefined;
-        
-        // Update reporter options for API
-        config.reporterOptions = {
-          ...config.reporterOptions,
-          mochawesomeReporterOptions: {
-            ...config.reporterOptions.mochawesomeReporterOptions,
-            reportDir: 'api/reports/mocha',
-            screenshotsFolder: 'api/reports/mocha/assets',
-            reportPageTitle: 'API Test Execution Report',
-          },
-          mochaJunitReporterReporterOptions: {
-            mochaFile: 'api/reports/junit/results-[hash].xml',
-          },
-        };
       } else {
-        // Web specific configuration
+        config.baseUrl = WEB_CONFIG.baseUrl;
+        config.specPattern = 'web/tests/**/*.cy.ts';
+        config.supportFile = 'web/support/e2e.ts';
+        config.fixturesFolder = 'web/fixtures';
+        
         const enableVideo = config.env.enableVideo;
         if (enableVideo && (enableVideo === 'true' || enableVideo === true)) {
           config.video = true;
           config.videoCompression = false;
         }
 
-        // Custom browser settings for web tests
         on('before:browser:launch', (browser: Cypress.Browser, launchOptions) => {
           if (browser.family === 'chromium' && browser.name !== 'electron') {
             launchOptions.args.push('--enable-features=CSSScrollSnapPoints');
@@ -89,7 +74,6 @@ export default defineConfig({
         });
       }
 
-      // Custom tasks for both Web and API
       on('task', {
         ...verifyDownloadTasks,
         log({ message }) {
@@ -105,7 +89,7 @@ export default defineConfig({
         },
         takeScreenshot({ name }: TakeScreenshotConfig) {
           if (!isApiTest) {
-            const screenshotsFolder = 'web/reports/mocha/assets';
+            const screenshotsFolder = 'reports/mocha/assets';
             if (!fs.existsSync(screenshotsFolder)) {
               fs.mkdirSync(screenshotsFolder, { recursive: true });
             }

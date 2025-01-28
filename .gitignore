@@ -9,3 +9,4 @@ api/reports/
 dist/
 coverage/
 *.mp4
+/reports/

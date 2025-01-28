@@ -23,12 +23,14 @@ afterEach(function () {
   const screenshotName = `${test.fullTitle().replace(/\s+/g, '_')}`;
   const specFile = Cypress.spec.name;
 
-  cy.screenshot(screenshotName, {
-    capture: 'fullPage',  // Changed to fullPage
-    overwrite: true,
-    scale: false  // Disable scaling
-  });
-  cy.addTestContext(`./assets/${specFile}/${screenshotName}.png`);
+  if (!Cypress.env('type') || Cypress.env('type') === 'web') {
+    cy.screenshot(screenshotName, {
+      capture: 'fullPage',
+      overwrite: true,
+      scale: false
+    });
+    cy.addTestContext(`./assets/${specFile}/${screenshotName}.png`);
+  }
 });
 
 beforeEach(function () {
@@ -49,4 +51,3 @@ Cypress.on('test:before:run', (test) => {
     }
   }
 });
-

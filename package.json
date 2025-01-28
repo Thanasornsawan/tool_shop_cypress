@@ -7,24 +7,17 @@
     "cy:open:api": "cypress open --config-file cypress.config.ts --env type=api",
     "cy:run:web": "cypress run --config-file cypress.config.ts --env type=web",
     "cy:run:api": "cypress run --config-file cypress.config.ts --env type=api",
-    "cy:run:chrome": "cypress run --browser chrome",
-    "cy:run:firefox": "cypress run --browser firefox",
-    
-    "report:clean:web": "rimraf web/reports/*",
-    "report:clean:api": "rimraf api/reports/*",
-    "report:clean:all": "rimraf {web,api}/reports/*",
-    
-    "report:merge:web": "mochawesome-merge web/reports/mocha/*.json > web/reports/mochawesome.json",
-    "report:merge:api": "mochawesome-merge api/reports/mocha/*.json > api/reports/mochawesome.json",
-    "report:merge:all": "mochawesome-merge {web,api}/reports/mocha/*.json > reports/mochawesome.json",
-    
-    "report:generate:web": "marge web/reports/mochawesome.json -f report -o web/reports --inline --charts --screenshots web/reports/mocha/assets",
-    "report:generate:api": "marge api/reports/mochawesome.json -f report -o api/reports --inline --charts --screenshots api/reports/mocha/assets",
-    "report:generate:all": "marge reports/mochawesome.json -f report -o reports --inline --charts --screenshots {web,api}/reports/mocha/assets",
-    
-    "test:web": "npm run report:clean:web && npm run cy:run:web && npm run report:merge:web && npm run report:generate:web",
-    "test:api": "npm run report:clean:api && npm run cy:run:api && npm run report:merge:api && npm run report:generate:api",
-    "test:all": "npm run report:clean:all && npm run cy:run:web && npm run cy:run:api && npm run report:merge:all && npm run report:generate:all"
+    "cy:run:all": "cypress run --config-file cypress.config.ts",
+    "cleanup": "node scripts/cleanup.js",
+    "report:merge": "mochawesome-merge reports/mocha/*.json > reports/combined.json",
+    "report:generate:web": "marge reports/combined.json --reportDir reports --reportFilename index --inline --charts --reportTitle \"Web UI Test Results\"",
+    "report:generate:api": "marge reports/combined.json --reportDir reports --reportFilename index --inline --charts --reportTitle \"API Test Results\"",
+    "report:generate:all": "marge reports/combined.json --reportDir reports --reportFilename index --inline --charts --reportTitle \"Web and API Test Results\"",
+    "test:web": "npm run cleanup && npm run cy:run:web && npm run report:merge && npm run report:generate:web",
+    "test:web:spec": "npm run cleanup && cypress run --config-file cypress.config.ts --env type=web --spec && npm run report:merge && npm run report:generate:web",
+    "test:api": "npm run cleanup && npm run cy:run:api && npm run report:merge && npm run report:generate:api",
+    "test:api:spec": "npm run cleanup && cypress run --config-file cypress.config.ts --env type=api --spec && npm run report:merge && npm run report:generate:api",
+    "test:all": "npm run cleanup && npm run cy:run:all && npm run report:merge && npm run report:generate:all"
   },
   "author": "",
   "license": "ISC",

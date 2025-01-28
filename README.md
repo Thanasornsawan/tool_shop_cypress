@@ -6,7 +6,10 @@ You may want to see detail about API documentation and how to setup web testing 
 ## Command to run project
 
 ```sh
-npx cypress run --spec web/tests/e2e.cy.ts
+npm run test:api
+npm run test:web
+npm run test:api:spec "api/tests/user.cy.ts"
+npm run test:all
 ```
 
 **For debug**
