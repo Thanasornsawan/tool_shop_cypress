@@ -5,18 +5,15 @@ import path from 'path';
 // Function to deduplicate test suites in the report
 async function deduplicateTestSuites(jsonPath: string) {
     try {
-        // Read the JSON report file
         const content = await fs.readFile(jsonPath, 'utf8');
         const report = JSON.parse(content);
 
         if (report.results && Array.isArray(report.results)) {
-            // Keep track of suite titles we've seen
             const seenSuites = new Set();
             const uniqueResults = [];
 
             report.results.forEach(result => {
                 if (result.suites && Array.isArray(result.suites)) {
-                    // Filter out duplicate suites based on their titles
                     const uniqueSuites = result.suites.filter(suite => {
                         if (seenSuites.has(suite.title)) {
                             console.log(`Removing duplicate suite: ${suite.title}`);
@@ -26,7 +23,6 @@ async function deduplicateTestSuites(jsonPath: string) {
                         return true;
                     });
 
-                    // Only keep results that have unique suites
                     if (uniqueSuites.length > 0) {
                         result.suites = uniqueSuites;
                         uniqueResults.push(result);
@@ -34,10 +30,7 @@ async function deduplicateTestSuites(jsonPath: string) {
                 }
             });
 
-            // Update the report with deduplicated results
             report.results = uniqueResults;
-
-            // Write the deduplicated report back to file
             await fs.writeFile(jsonPath, JSON.stringify(report, null, 2));
             console.log('Successfully deduplicated test suites in report');
         }
@@ -103,9 +96,8 @@ async function modifyJsonReport(jsonPath: string, suitePrefix: string) {
 }
 
 // Function to run web test spec(s)
-async function runWebTestSpec(specFile?: string) {
+async function runWebTestSpec(specFile?: string, headed: boolean = false, browser: string = '', enableVideo: boolean = false) {
     let specPath = specFile || 'web/tests/**/*.cy.ts';  // Default to all web test specs if no file is provided
-
     console.log(`\nRunning web tests for spec file(s): ${specPath}...`);
 
     try {
@@ -114,15 +106,34 @@ async function runWebTestSpec(specFile?: string) {
         await ensureDirectoryExists('reports/mocha');
 
         let testSuccess = false;
+
+        const command: string[] = ['npx cypress run', '--config-file cypress.config.ts', '--env type=web'];
+
+        if (headed) {
+            command.push('--headed');
+        }
+
+        if (browser) {
+            command.push(`--browser ${browser}`);
+        }
+
+        if (enableVideo) {
+            command.push('--config video=true,videoCompression=false');
+            command.push('--env enableVideo=true');
+            command.push('--config videosFolder=web/videos');
+        }
+
+        if (specFile) {
+            command.push(`--spec "${specPath}"`);
+        }
+
         try {
-            // Execute only the specific spec file(s)
-            execSync(`npx cypress run --spec ${specPath} --config-file cypress.config.ts --env type=web`, { stdio: 'inherit' });
+            execSync(command.join(' '), { stdio: 'inherit' });
             testSuccess = true;
         } catch (error) {
             console.log('Web test failed, but continuing with report generation...');
         }
 
-        // Check if any JSON files are created and process them
         if (await checkJsonFilesExist('reports/mocha')) {
             const jsonFiles = await fs.readdir('reports/mocha');
             for (const file of jsonFiles) {
@@ -152,11 +163,11 @@ async function copyDirectory(src: string, dest: string) {
         if (await fs.access(src).then(() => true).catch(() => false)) {
             await ensureDirectoryExists(dest);
             const entries = await fs.readdir(src, { withFileTypes: true });
-            
+
             for (const entry of entries) {
                 const srcPath = path.join(src, entry.name);
                 const destPath = path.join(dest, entry.name);
-                
+
                 if (entry.isDirectory()) {
                     await copyDirectory(srcPath, destPath);
                 } else {
@@ -173,7 +184,6 @@ async function copyDirectory(src: string, dest: string) {
 // Function to generate a combined report
 async function generateCombinedReport() {
     console.log('\nGenerating combined report...');
-    
     try {
         const hasWebReports = await checkJsonFilesExist('web/reports/mocha');
 
@@ -182,25 +192,18 @@ async function generateCombinedReport() {
             return;
         }
 
-        // Clean and prepare reports directory
         await cleanDirectory('reports');
         await ensureDirectoryExists('reports/assets');
-
-        // Copy assets
         await copyDirectory('web/reports/mocha/assets', 'reports/assets');
 
-        // Merge all reports into a combined JSON
         let mergeCommand = 'mochawesome-merge web/reports/mocha/*.json > reports/combined.json';
 
         execSync(mergeCommand, { stdio: 'inherit' });
 
-        // Deduplicate test suites in the combined report
         await deduplicateTestSuites('reports/combined.json');
 
-        // Generate the HTML report from the web-specific merged JSON
         execSync('npm run report:generate:web', { stdio: 'inherit' });
 
-        // Fix asset paths
         const reportPath = 'reports/combined_results.html';
         if (await fs.access(reportPath).then(() => true).catch(() => false)) {
             let htmlContent = await fs.readFile(reportPath, 'utf8');
@@ -214,13 +217,12 @@ async function generateCombinedReport() {
 }
 
 // Main function to run the tests
-async function runAllTests(specFile: string) {
+async function runAllTests(specFile: string, headed: boolean, browser: string, enableVideo: boolean) {
     try {
         console.log('Running initial cleanup...');
         execSync('node scripts/cleanup.js', { stdio: 'inherit' });
 
-        // Run the specific web test spec file passed as a parameter
-        const webSuccess = await runWebTestSpec(specFile);
+        const webSuccess = await runWebTestSpec(specFile, headed, browser, enableVideo);
 
         await generateCombinedReport();
 
@@ -245,16 +247,26 @@ async function runAllTests(specFile: string) {
     }
 }
 
-// Get the spec file from the command line arguments
-const specFile = process.argv[2]; // Pass the spec file as an argument (e.g., 'cypress/integration/testfile.spec.js')
-/*
-if (!specFile) {
-    console.error('Please provide a spec file as an argument.');
-    process.exit(1);
-}*/
+// Get the spec file and options from the command line arguments
+const args = process.argv.slice(2);
+let specFile = '';
+let headed = false;
+let browser = '';
+let enableVideo = false;
 
-// If no spec file is passed, run all tests
-runAllTests(specFile || 'web/tests/**/*.cy.ts').catch(error => {
+args.forEach((arg, i) => {
+    if (arg.endsWith('.cy.ts')) {
+        specFile = arg;
+    } else if (arg === '--headed') {
+        headed = true;
+    } else if (arg.startsWith('--browser')) {
+        browser = args[i + 1] || '';
+    } else if (arg.includes('enableVideo=true')) {
+        enableVideo = true;
+    }
+});
+
+runAllTests(specFile, headed, browser, enableVideo).catch(error => {
     console.error('Unhandled error:', error);
     process.exit(1);
 });
