@@ -33,3 +33,6 @@ npm run test:api
 ```sh
 npm run test:all
 ```
+![cmd output](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/all_1.png?raw=true)
+![cmd output2](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/all_2.png?raw=true)
+![merge html](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/merge_html.png?raw=true)
