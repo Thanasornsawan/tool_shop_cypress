@@ -4,33 +4,32 @@ This practice use website https://practicesoftwaretesting.com/ for testing. <br/
 You may want to see detail about API documentation and how to setup web testing on localhost from https://github.com/testsmith-io/practice-software-testing <br/>
 
 ## Command to run project
-
-```sh
-npm run test:api
-npm run test:web
-npm run test:api:spec "api/tests/user.cy.ts"
-npm run test:all
-```
-
 **For debug**
 ```sh
 npm run cy:open
 ```
-
-**For run with browser**
+**For run with specific browser and record video**
 ```sh
-npx cypress run --spec web/tests/search.cy.ts --headed --browser chrome
+npm run test:web:spec:headed:chrome "web/tests/search.cy.ts" --env enableVideo=true 
 ```
-
-**For run with record video**
+![custom 1](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/custom_1.png?raw=true)
+![custom 2](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/custom_2.png?raw=true)
+![custom 3](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/custom_3.png?raw=true)
+![video](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/preview_video.png?raw=true)
+**For run with default headless browser**
 ```sh
-npx cypress run --spec web/tests/e2e.cy.ts --env enableVideo=true 
+npm run test:web
 ```
-
-**Result** <br/>
-https://github.com/Thanasornsawan/tool_shop_cypress/raw/main/web/videos/e2e.cy.ts.mp4
-
 ![web result](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/web_result.png?raw=true)
+![web report](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/web_report.png?raw=true)
 ![report](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/report.png?raw=true)
-
+**For run only API**
+```sh
+npm run test:api
+```
 ![api result](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/api_result.png?raw=true)
+![api report](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/api_report.png?raw=true)
+**For run both web and API**
+```sh
+npm run test:all
+```

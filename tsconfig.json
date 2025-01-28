@@ -13,5 +13,5 @@
       "resolveJsonModule": true,
       "esModuleInterop": true
     },
-    "include": ["**/*.ts", "web/**/*.ts"]   
+    "include": ["**/*.ts", "web/**/*.ts", "scripts/run-api-spec.js"]   
   }

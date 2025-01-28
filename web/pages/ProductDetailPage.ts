@@ -16,6 +16,7 @@ export default class ProductDetailPage extends BasePage {
   private readonly addToCartSuccess = 'div[role="alert"]:contains("Product added to shopping cart.")';
   private readonly relatedProductSection = '//h1[text()="Related products"]';
   private readonly relatedProductCardTitle = '.card-title';
+  private readonly relatedProductCardLink = '//h5[@class="card-title"]/parent::div/parent::a'
 
   // Get the product name
   getProductName(): Cypress.Chainable<string> {
@@ -98,14 +99,45 @@ export default class ProductDetailPage extends BasePage {
       );
   }
 
-  openRelatedProduct(index: number): void {
-    cy.xpath('//h5[@class="card-title"]/parent::div/a') // Selector for related product links
-      .eq(index)
-      .scrollIntoView()
-      .should('be.visible')
-      .invoke('removeAttr', 'target') // Ensure link opens in the same tab
-      .click();
-  }
+  openRelatedProducts(mainCategory: string): void {
+    const relatedProductCardLink = this.relatedProductCardLink;
+    const categoryLabel = this.categoryLabel;
+
+    cy.xpath(relatedProductCardLink)
+        .should('be.visible')
+        .should('not.have.class', 'loading') // If there’s any loading class, wait until it's gone
+        .then($links => {
+            const linksArray = Array.from($links); // Convert NodeList to array
+
+            function processLink(index: number) {
+                if (index >= linksArray.length) return; // Exit condition
+
+                // Dynamically re-query the link and ensure it's stable
+                cy.xpath(`(${relatedProductCardLink})[${index + 1}]`).as('currentLink');
+
+                cy.get('@currentLink')
+                    .should('exist')
+                    .should('be.visible')
+                    .should('not.have.class', 'loading') // Ensure no loading state is present
+                    .click(); // Perform click action
+
+                // Verify category on the new page
+                cy.xpath(categoryLabel)
+                    .should('be.visible')
+                    .should('have.text', mainCategory);
+
+                // Navigate back and stabilize the DOM
+                cy.go('back');
+                cy.xpath(relatedProductCardLink)
+                    .should('be.visible') // Wait for related products to reappear
+                    .should('not.have.class', 'loading'); // Ensure loading class is not present
+
+                processLink(index + 1); // Process the next link
+            }
+
+            processLink(0); // Start processing links
+        });
+}
 
   outOfStockLabelDisplay(): Cypress.Chainable<JQuery<HTMLElement>> {
     return cy.xpath(this.outOfStockLabel).should('be.visible');

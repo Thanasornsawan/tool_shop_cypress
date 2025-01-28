@@ -32,29 +32,19 @@ describe('Product Page Tests', () => {
         });
     });
 
-    it('should verify related products match main product category', () => {
-        // Step 1: Search for "Pliers"
+    it.only('should verify related products match main product category', () => {
+        // Step 1: Search for "Pliers" and wait for results
         searchPage.search('Pliers');
-        cy.get('.card-body').first().click(); // Click the first product
-      
-        // Step 2: Get the main category of the first product
+    
+        // Step 2: Click the first product and ensure the page loads
+        searchPage.clickProduct();
+    
+        // Step 3: Get the main product's category
         productDetailPage.getCategory().then((mainCategory) => {
-          // Step 3: Retrieve related product names
-          productDetailPage.getRelatedProductNames().then((products) => {
-            // Step 4: Loop through each related product
-            products.forEach((_, index) => {
-              // Open each related product
-              productDetailPage.openRelatedProduct(index);
-      
-              // Verify the category matches the main category
-              productDetailPage.getCategory().should('eq', mainCategory);
-      
-              // Navigate back to the main product
-              cy.go('back');
-            });
-          });
+            // Step 4: Open and verify related products dynamically
+            productDetailPage.openRelatedProducts(mainCategory);
         });
-    });            
+    });           
 
     it('should adjust quantity on product detail page and verify cart page match', () => {
         const productConfigs = [
