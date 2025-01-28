@@ -102,9 +102,11 @@ async function modifyJsonReport(jsonPath: string, suitePrefix: string) {
     }
 }
 
-// Function to run a specific web test spec file
-async function runWebTestSpec(specFile: string) {
-    console.log(`\nRunning web tests for spec file: ${specFile}...`);
+// Function to run web test spec(s)
+async function runWebTestSpec(specFile?: string) {
+    let specPath = specFile || 'web/tests/**/*.cy.ts';  // Default to all web test specs if no file is provided
+
+    console.log(`\nRunning web tests for spec file(s): ${specPath}...`);
 
     try {
         const reportDir = 'web/reports/mocha';
@@ -113,8 +115,8 @@ async function runWebTestSpec(specFile: string) {
 
         let testSuccess = false;
         try {
-            // Execute only the specific spec file
-            execSync(`npx cypress run --spec ${specFile}`, { stdio: 'inherit' });
+            // Execute only the specific spec file(s)
+            execSync(`npx cypress run --spec ${specPath} --config-file cypress.config.ts --env type=web`, { stdio: 'inherit' });
             testSuccess = true;
         } catch (error) {
             console.log('Web test failed, but continuing with report generation...');
@@ -126,7 +128,7 @@ async function runWebTestSpec(specFile: string) {
             for (const file of jsonFiles) {
                 if (file.endsWith('.json')) {
                     const jsonPath = path.join('reports/mocha', file);
-                    await modifyJsonReport(jsonPath, 'WEB');
+                    await modifyJsonReport(jsonPath, 'Web');
 
                     const targetPath = path.join(reportDir, file);
                     await fs.copyFile(jsonPath, targetPath);
@@ -245,13 +247,14 @@ async function runAllTests(specFile: string) {
 
 // Get the spec file from the command line arguments
 const specFile = process.argv[2]; // Pass the spec file as an argument (e.g., 'cypress/integration/testfile.spec.js')
-
+/*
 if (!specFile) {
     console.error('Please provide a spec file as an argument.');
     process.exit(1);
-}
+}*/
 
-runAllTests(specFile).catch(error => {
+// If no spec file is passed, run all tests
+runAllTests(specFile || 'web/tests/**/*.cy.ts').catch(error => {
     console.error('Unhandled error:', error);
     process.exit(1);
 });
