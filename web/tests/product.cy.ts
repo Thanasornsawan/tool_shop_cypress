@@ -17,7 +17,7 @@ describe('Product Page Tests', () => {
         cy.visit('/');
     });
 
-    it('should search for Long Nose Pliers and verify out of stock behavior', () => {
+    it('TP-27 should search for Long Nose Pliers and verify out of stock behavior', () => {
         const searchKeyword = 'Long Nose Pliers';
         searchPage.search(searchKeyword);
         
@@ -32,7 +32,7 @@ describe('Product Page Tests', () => {
         });
     });
 
-    it('should verify related products match main product category', () => {
+    it('TP-28 should verify related products match main product category', () => {
         // Step 1: Search for "Pliers" and wait for results
         searchPage.search('Pliers');
     
@@ -46,7 +46,7 @@ describe('Product Page Tests', () => {
         });
     });           
 
-    it('should adjust quantity on product detail page and verify cart page match', () => {
+    it('TP-29 should adjust quantity on product detail page and verify cart page match', () => {
         const productConfigs = [
             { productName: 'Hammer', quantity: 3 },
             { productName: 'Pliers', quantity: 2 }
