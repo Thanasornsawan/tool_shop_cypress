@@ -37,3 +37,12 @@ npm run test:all
 ![cmd output](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/all_1.png?raw=true)
 ![cmd output2](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/all_2.png?raw=true)
 ![merge html](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/merge_html.png?raw=true)
+**For convert mocha JSON to Xray format and upload to Jira**
+```sh
+node scripts/convert_mocha_xray.js
+python3 scripts/upload_xray_jira.py
+```
+![jira command](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/jira_command.png?raw=true)
+![jira result](https://github.com/Thanasornsawan/tool_shop_cypress/blob/main/pictures/jira.png?raw=true)
+
+Refer blog https://wisdomgoody.medium.com/integrate-cypress-report-with-xray-jira-api-d714e9abe8c3
